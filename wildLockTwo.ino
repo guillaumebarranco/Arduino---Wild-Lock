@@ -1,28 +1,35 @@
-// IMPORTS ET CREATION DES VARIABLES GLOBALES
+/*************************/
+/******** IMPORTS ********/
+/*************************/
 #include <Wire.h>
 #include "rgb_lcd.h"
 #include <Time.h>
 
-rgb_lcd lcd;
+/*************************/
+/******* CONSTANTS *******/
+/*************************/
 
-#define ROTARY_ANGLE_SENSOR A0
-#define LED 3//the Grove - LED is connected to D3 of Arduino
-#define ADC_REF 5//reference voltage of ADC is 5v.If the Vcc switch on the seeeduino
-         //board switches to 3V3, the ADC_REF should be 3.3
-#define GROVE_VCC 5//VCC of the grove interface is normally 5v
-#define FULL_ANGLE 300//full value of the rotary angle is 300 degrees
+rgb_lcd lcd; // lcd is screen displaying variable
 
-#define BUTTON 5
+#define ROTARY_ANGLE_SENSOR A0 // Rotative button is pin A0
+#define LED 3 // Led is pin 3
+#define BUTTON 5 // Button is pin 5
+
+#define FULL_ANGLE 300 //full value of the rotary angle is 300 degrees
+#define ADC_REF 5
+#define GROVE_VCC 5
 
 /*************************/
 /******* VARIABLES *******/
 /*************************/
 
+// For the screen display
 int a;
 const int colorR = 255;
 const int colorG = 0;
 const int colorB = 0;
 
+// The numbers to find are random
 int first = rand_a_b(0,300);
 int the_second = rand_a_b(0,300);
 int third = rand_a_b(0,300);
@@ -35,153 +42,147 @@ int time = 0;
 int buttonState = 0;
 
 /*************************/
-/******* FONCTIONS *******/
+/******* FUNCTIONS *******/
 /*************************/
 
-// Fonction d'initialisation
+// Initialisation function for the LED and the Screen
 void setup() {
-
-  lcd.begin(16, 2);
-  lcd.setRGB(colorR, colorG, colorB);
-  pinMode(LED, OUTPUT);
+    lcd.begin(16, 2);
+    lcd.setRGB(colorR, colorG, colorB);
+    pinMode(LED, OUTPUT);
 }
 
-// Fonction principale de boucle
+// Batch function that will call the main function continouisly
 void loop() {
-  
-  buttonState = digitalRead(BUTTON);
 
-  if (buttonState == HIGH) {
-    redoGame();
-  }
+    buttonState = digitalRead(BUTTON);
 
-  launchGame();
+    if (buttonState == HIGH) {
+        redoGame();
+    }
+
+    launchGame();
 }
 
+// Restart game function
 void redoGame() {
-  a=analogRead(0);
-  lcd.setCursor(0, 1);
-  lcd.print("begin   ");
-  chapter = 1;
+    a=analogRead(0);
+    lcd.setCursor(0, 1);
+    lcd.print("begin   ");
+    chapter = 1;
 
-  first = rand_a_b(0,300);
-  the_second = rand_a_b(0,300);
-  third = rand_a_b(0,300);
+    first = rand_a_b(0,300);
+    the_second = rand_a_b(0,300);
+    third = rand_a_b(0,300);
 
-  time = 0;
-  current = first;
+    time = 0;
+    current = first;
 
-  delay(2000);
+    delay(2000);
 }
 
 void launchGame() {
-  if(chapter < 4) {
 
-    int degrees;
-    degrees = getDegree();
+    if(chapter < 4) {
 
-    a=analogRead(0);
-    lcd.setCursor(0, 1);
+        int degrees;
+        degrees = getDegree();
 
-    if(degrees == current) {
+        a=analogRead(0);
+        lcd.setCursor(0, 1);
 
-      if(chapter == 1) {
-        //lcd.print("etape 1");
-        brightRedLed();
-        current = the_second;
+        if(degrees == current) {
 
-      } else if(chapter == 2) {
-        brightBlueLed();
-        current = third;
+            // STEPS
+            if(chapter == 1) {
+                brightRedLed();
+                current = the_second;
 
-      } else if(chapter == 3) {
-        brightGreenLed();
-        setFinishedTime();
-      }
+            } else if(chapter == 2) {
+                brightBlueLed();
+                current = third;
 
-      if(chapter < 4) {
-        chapter = chapter + 1;
-      }
+            } else if(chapter == 3) {
+                brightGreenLed();
+                setFinishedTime();
+            }
 
-    } else {
-      getCurrent(degrees);
+            if(chapter < 4) {
+                chapter = chapter + 1;
+            }
+
+        } else {
+            getCurrent(degrees);
+        }
+
+        lcd.setCursor(0, 1);
+        delay(500);
     }
-    lcd.setCursor(0, 1);
-    delay(500);
-  }
 }
 
+// Random function to generate number between min and max
 int rand_a_b(int a, int b){
-  return rand()%(b-a) +a;
+    return rand()%(b-a) +a;
 }
 
-// Fonction pour afficher la fin
+// Ending function to display the final time required to finish the game
 void setFinishedTime() {
-  lcd.print("en ");
-  lcd.print(time/2);
-  lcd.print("s");
+    lcd.print("en ");
+    lcd.print(time/2);
+    lcd.print("s");
 }
 
-/*
-* Fonctions pour faire briller les LED
-*/
-
+// Function making the LED shining
 void brightLed() {
-  digitalWrite(LED, HIGH);
-  delay(1000);
-  digitalWrite(LED, LOW);
-  delay(500);
+    digitalWrite(LED, HIGH);
+    delay(1000);
+    digitalWrite(LED, LOW);
+    delay(500);
 }
 
 void brightRedLed() {
-  brightLed();
+    brightLed();
 }
-
 void brightBlueLed() {
-  brightLed();
-  brightLed();
+    brightLed();
+    brightLed();
 }
-
 void brightGreenLed() {
-  brightLed();
-  brightLed();
-  brightLed();
+    brightLed();
+    brightLed();
+    brightLed();
 }
 
 // Check if user is near the number to find or not
 void getCurrent(int val) {
-  
-  if(val > current) {
 
-    if(val - current < 20) {
-      lcd.print("chaud   ");
+    if(val > current) {
+
+        if(val - current < 20) {
+            lcd.print("chaud   ");
+        } else {
+            lcd.print("froid   ");
+        }
+
     } else {
-      lcd.print("froid   ");
+
+        if(current - val < 20) {
+            lcd.print("chaud   ");
+        } else {
+            lcd.print("froid   ");
+        }
     }
 
-  } else {
-
-    if(current - val < 20) {
-      lcd.print("chaud   ");
-    } else {
-      lcd.print("froid   ");
-    }
-  }
-
-  time = time + 1;
+    time = time + 1;
 }
 
-// Get the degrees number of the device
+// Get the degrees number of the rotative button
 int getDegree() {
 
-  int sensor_value = analogRead(ROTARY_ANGLE_SENSOR);
-  float voltage;
-  voltage = (float)sensor_value*ADC_REF/1023;
-  float degrees = (voltage*FULL_ANGLE)/GROVE_VCC;
+    int sensor_value = analogRead(ROTARY_ANGLE_SENSOR);
+    float voltage;
+    voltage = (float)sensor_value*ADC_REF/1023;
+    float degrees = (voltage*FULL_ANGLE)/GROVE_VCC;
 
-  return degrees;
+    return degrees;
 }
-
-
-
-
